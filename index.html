@@ -341,8 +341,9 @@
             speakPraise(randomEncouragement);
         } else {
             wrongCount++;
-            feedbackArea.innerHTML = `<span class="error">Not quite! The correct answer was: <strong>${expected}</strong></span>`;
-            speakText(expected, testMode === 'en2fr' ? 'fr-FR' : 'en-US');
+            const wrongFeedback = `Not quite! The correct answer was: ${expected}`;
+            feedbackArea.innerHTML = `<span class="error">${wrongFeedback}</span>`;
+            speakText(wrongFeedback, testMode === 'en2fr' ? 'fr-FR' : 'en-US');
         }
 
         updateScoreboard();
