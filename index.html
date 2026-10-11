@@ -81,6 +81,46 @@
             background-color: #27ae60;
             transform: translateY(-2px);
         }
+        .drag-board {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .drop-slot {
+            min-height: 72px;
+            border: 3px dashed #bdc3c7;
+            border-radius: 12px;
+            background: #f8f9fa;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-size: 22px;
+            margin-bottom: 12px;
+            transition: 0.2s;
+            gap: 6px;
+        }
+        .drop-slot.matched {
+            border-color: #2ecc71;
+            background: #eafaf1;
+        }
+        .target-label {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .matched-word {
+            margin-top: 8px;
+            font-size: 18px;
+            color: #27ae60;
+            font-weight: bold;
+        }
+        .draggable-word {
+            min-width: 140px;
+            margin: 6px;
+        }
         input[type="text"] {
             font-size: 28px;
             padding: 12px;
@@ -138,6 +178,7 @@
         <h2>Select a Game Mode:</h2>
         <button onclick="startGame('face')">👀 Game 1: The Face (Le Visage)</button><br>
         <button onclick="startGame('body')">🏃‍♂️ Game 2: The Body (Le Corps)</button><br>
+        <button onclick="startDragDropGame()" style="background-color: #8e44ad;">🧩 Game 3: Drag and Drop</button><br>
         <button onclick="showLearningMode()" style="background-color: #2ecc71;">📚 Learning Mode</button>
     </div>
 
@@ -157,6 +198,30 @@
                 <div id="english-word-list" class="word-list"></div>
             </div>
         </div>
+    </div>
+
+    <!-- DRAG AND DROP GAME SCREEN -->
+    <div id="drag-drop-screen" class="hidden">
+        <h2>🧩 Game 3: Drag and Drop</h2>
+        <div class="scoreboard">
+            <span>Correct: <strong id="drag-correct">0</strong></span>
+            <span>Incorrect: <strong id="drag-wrong">0</strong></span>
+            <span>Percent: <strong id="drag-percent">0%</strong></span>
+            <span>Grade: <strong id="drag-grade">F</strong></span>
+        </div>
+
+        <div class="drag-board">
+            <div class="learning-column">
+                <h3 style="color: #2980b9;">French</h3>
+                <div id="drag-french-list"></div>
+            </div>
+            <div class="learning-column">
+                <h3 style="color: #27ae60;">English</h3>
+                <div id="drag-english-list" class="word-list"></div>
+            </div>
+        </div>
+
+        <button onclick="returnToMenu()" style="background-color: #95a5a6; font-size: 18px; padding: 10px 20px;">🏠 Back to Menu</button>
     </div>
 
     <!-- GAMEPLAY SCREEN -->
@@ -230,6 +295,24 @@
     const encouragingPhrases = [
         "Great job!", "Fantastic!", "Super!", "Magnifique!", "You got it!", "Excellent work!", "Awesome!"
     ];
+    const allVocabulary = [...faceData, ...bodyData];
+
+    const dragGameState = {
+        pairs: [],
+        matched: [],
+        correct: 0,
+        wrong: 0,
+        total: 0
+    };
+
+    function shuffle(arr) {
+        const newArr = [...arr];
+        for (let i = newArr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [newArr[i], newArr[j]] = [newArr[j], newArr[i]];
+        }
+        return newArr;
+    }
 
     function startGame(type) {
         currentDataset = [...(type === 'face' ? faceData : bodyData)];
@@ -253,6 +336,7 @@
         buildLearningMode();
         document.getElementById('main-menu').classList.add('hidden');
         document.getElementById('game-screen').classList.add('hidden');
+        document.getElementById('drag-drop-screen').classList.add('hidden');
         document.getElementById('summary-screen').classList.add('hidden');
         document.getElementById('learning-screen').classList.remove('hidden');
     }
@@ -275,6 +359,181 @@
         if (!('speechSynthesis' in window)) return;
         window.speechSynthesis.cancel();
         speakText(word, langCode);
+    }
+
+    function startDragDropGame() {
+        dragGameState.pairs = shuffle(allVocabulary);
+        dragGameState.matched = [];
+        dragGameState.correct = 0;
+        dragGameState.wrong = 0;
+        dragGameState.total = dragGameState.pairs.length;
+
+        document.getElementById('main-menu').classList.add('hidden');
+        document.getElementById('learning-screen').classList.add('hidden');
+        document.getElementById('game-screen').classList.add('hidden');
+        document.getElementById('summary-screen').classList.add('hidden');
+        document.getElementById('drag-drop-screen').classList.remove('hidden');
+
+        renderDragDropBoard();
+    }
+
+    function renderDragDropBoard() {
+        const frenchTargets = shuffle([...new Set(dragGameState.pairs.map(item => item.fr))]);
+        const frenchContainer = document.getElementById('drag-french-list');
+        const englishContainer = document.getElementById('drag-english-list');
+
+        frenchContainer.innerHTML = frenchTargets.map((frWord) => {
+            const matchedPair = dragGameState.matched.find(item => item.fr === frWord);
+            if (matchedPair) {
+                return `
+                    <div class="drop-slot matched" data-word="${frWord}">
+                        <div class="target-label">${frWord}</div>
+                        <div class="matched-word">${matchedPair.en}</div>
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="drop-slot" data-word="${frWord}">
+                    <div class="target-label">${frWord}</div>
+                </div>
+            `;
+        }).join('');
+
+        const remainingEnglish = shuffle(
+            dragGameState.pairs
+                .filter(pair => !dragGameState.matched.some(item => item.fr === pair.fr && item.en === pair.en))
+                .map(pair => pair.en)
+        );
+
+        englishContainer.innerHTML = remainingEnglish
+            .map(word => `<button class="word-chip draggable-word" draggable="true" data-word="${word}">${word}</button>`)
+            .join('');
+
+        englishContainer.querySelectorAll('.draggable-word').forEach((button) => {
+            button.addEventListener('dragstart', (event) => {
+                event.dataTransfer.setData('text/plain', event.currentTarget.dataset.word);
+                event.dataTransfer.effectAllowed = 'move';
+            });
+        });
+
+        frenchContainer.querySelectorAll('.drop-slot').forEach((slot) => {
+            if (slot.classList.contains('matched')) return;
+            slot.addEventListener('dragover', (event) => event.preventDefault());
+            slot.addEventListener('drop', handleDragDrop); 
+        });
+
+        updateDragScore();
+    }
+
+    function handleDragDrop(event) {
+        event.preventDefault();
+        const droppedWord = event.dataTransfer.getData('text/plain');
+        const targetFrenchWord = event.currentTarget.dataset.word;
+
+        if (!droppedWord || !targetFrenchWord) return;
+
+        const matchingPair = dragGameState.pairs.find(
+            pair => pair.fr === targetFrenchWord && pair.en === droppedWord
+        );
+
+        if (matchingPair) {
+            dragGameState.matched.push(matchingPair);
+            dragGameState.correct++;
+            speakText('Correct', 'en-US');
+            playSuccessTone();
+            renderDragDropBoard();
+
+            if (dragGameState.matched.length >= dragGameState.total) {
+                finishDragDropGame();
+            }
+            return;
+        }
+
+        dragGameState.wrong++;
+        speakText('Sorry, try again', 'en-US');
+        playErrorTone();
+        renderDragDropBoard();
+    }
+
+    function updateDragScore() {
+        const totalAttempts = dragGameState.correct + dragGameState.wrong;
+        const percentage = totalAttempts > 0 ? Math.round((dragGameState.correct / totalAttempts) * 100) : 0;
+        let grade = 'F';
+        if (percentage >= 90) grade = 'A';
+        else if (percentage >= 80) grade = 'B';
+        else if (percentage >= 70) grade = 'C';
+        else if (percentage >= 60) grade = 'D';
+
+        document.getElementById('drag-correct').innerText = dragGameState.correct;
+        document.getElementById('drag-wrong').innerText = dragGameState.wrong;
+        document.getElementById('drag-percent').innerText = percentage + '%';
+        document.getElementById('drag-grade').innerText = grade;
+    }
+
+    function playSuccessTone() {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContextClass) return;
+
+        const audioContext = new AudioContextClass();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+
+        oscillator.type = 'triangle';
+        oscillator.frequency.setValueAtTime(660, audioContext.currentTime);
+        oscillator.frequency.linearRampToValueAtTime(880, audioContext.currentTime + 0.12);
+
+        gainNode.gain.setValueAtTime(0.0001, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.18, audioContext.currentTime + 0.02);
+        gainNode.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.26);
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        oscillator.start();
+        oscillator.stop(audioContext.currentTime + 0.28);
+    }
+
+    function playErrorTone() {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContextClass) return;
+
+        const audioContext = new AudioContextClass();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+
+        oscillator.type = 'sawtooth';
+        oscillator.frequency.setValueAtTime(220, audioContext.currentTime);
+        oscillator.frequency.linearRampToValueAtTime(140, audioContext.currentTime + 0.22);
+
+        gainNode.gain.setValueAtTime(0.0001, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.12, audioContext.currentTime + 0.02);
+        gainNode.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.22);
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        oscillator.start();
+        oscillator.stop(audioContext.currentTime + 0.24);
+    }
+
+    function finishDragDropGame() {
+        const totalAttempts = dragGameState.correct + dragGameState.wrong;
+        const percentage = totalAttempts > 0 ? Math.round((dragGameState.correct / totalAttempts) * 100) : 0;
+        let grade = 'F';
+        if (percentage >= 90) grade = 'A';
+        else if (percentage >= 80) grade = 'B';
+        else if (percentage >= 70) grade = 'C';
+        else if (percentage >= 60) grade = 'D';
+
+        document.getElementById('drag-drop-screen').classList.add('hidden');
+        document.getElementById('summary-screen').classList.remove('hidden');
+
+        document.getElementById('final-stats').innerHTML = `
+            Total Matches: ${dragGameState.total}<br>
+            Correct Matches: <span style="color: green;">${dragGameState.correct}</span><br>
+            Incorrect Attempts: <span style="color: red;">${dragGameState.wrong}</span><br>
+            Percentage: <strong>${percentage}%</strong><br>
+            Final Grade: <strong style="font-size: 36px; color: #2980b9;">${grade}</strong>
+        `;
     }
 
     function nextQuestion() {
@@ -473,6 +732,7 @@
         document.getElementById('game-screen').classList.add('hidden');
         document.getElementById('summary-screen').classList.add('hidden');
         document.getElementById('learning-screen').classList.add('hidden');
+        document.getElementById('drag-drop-screen').classList.add('hidden');
         document.getElementById('main-menu').classList.remove('hidden');
     }
 </script>
