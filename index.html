@@ -50,9 +50,9 @@
             transform: scale(1.05);
         }
         .learning-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
             margin-top: 20px;
             text-align: left;
         }
@@ -67,6 +67,12 @@
             flex-wrap: wrap;
             gap: 10px;
             margin-top: 10px;
+        }
+        .pair-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            align-items: stretch;
         }
         .word-chip {
             background-color: #2ecc71;
@@ -254,16 +260,7 @@
         <p style="color: #7f8c8d; font-size: 20px;">Click any word to hear the pronunciation.</p>
         <button onclick="returnToMenu()" style="background-color: #95a5a6; font-size: 18px; padding: 10px 20px;">🏠 Back to Menu</button>
 
-        <div class="learning-grid">
-            <div class="learning-column">
-                <h3 style="color: #2980b9;">French</h3>
-                <div id="french-word-list" class="word-list"></div>
-            </div>
-            <div class="learning-column">
-                <h3 style="color: #27ae60;">English</h3>
-                <div id="english-word-list" class="word-list"></div>
-            </div>
-        </div>
+        <div class="learning-grid" id="learning-grid"></div>
     </div>
 
     <!-- DRAG AND DROP GAME SCREEN -->
@@ -418,16 +415,25 @@
 
     function buildLearningMode() {
         const allWords = [...faceData, ...bodyData];
-        const frenchWords = [...new Set(allWords.map(item => item.fr))];
-        const englishWords = [...new Set(allWords.map(item => item.en))];
+        const vocabularyPairs = [...new Map(allWords.map(item => [item.fr, item])).values()];
+        const learningGrid = document.getElementById('learning-grid');
 
-        document.getElementById('french-word-list').innerHTML = frenchWords
-            .map(word => `<button class="word-chip" onclick="playLearningWord('${word.replace(/'/g, "\\'")}', 'fr-FR')">${word}</button>`)
-            .join('');
-
-        document.getElementById('english-word-list').innerHTML = englishWords
-            .map(word => `<button class="word-chip" onclick="playLearningWord('${word.replace(/'/g, "\\'")}', 'en-US')">${word}</button>`)
-            .join('');
+        learningGrid.innerHTML = vocabularyPairs.map(pair => `
+            <div class="pair-row">
+                <div class="learning-column">
+                    <h3 style="color: #2980b9; margin-top: 0;">French</h3>
+                    <div class="word-list">
+                        <button class="word-chip" onclick="playLearningWord('${pair.fr.replace(/'/g, "\\'")}', 'fr-FR')">${pair.fr}</button>
+                    </div>
+                </div>
+                <div class="learning-column">
+                    <h3 style="color: #27ae60; margin-top: 0;">English</h3>
+                    <div class="word-list">
+                        <button class="word-chip" onclick="playLearningWord('${pair.en.replace(/'/g, "\\'")}', 'en-US')">${pair.en}</button>
+                    </div>
+                </div>
+            </div>
+        `).join('');
     }
 
     function openDragInstructions() {
