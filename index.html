@@ -176,9 +176,9 @@
     <!-- MAIN MENU SCREEN -->
     <div id="main-menu">
         <h2>Select a Game Mode:</h2>
-        <button onclick="startGame('face')">👀 Game 1: The Face (Le Visage)</button><br>
-        <button onclick="startGame('body')">🏃‍♂️ Game 2: The Body (Le Corps)</button><br>
-        <button onclick="startDragDropGame()" style="background-color: #8e44ad;">🧩 Game 3: Drag and Drop</button><br>
+        <!-- <button onclick="startGame('face')">👀 Game 1: The Face (Le Visage)</button><br>
+        <button onclick="startGame('body')">🏃‍♂️ Game 2: The Body (Le Corps)</button><br> -->
+        <button onclick="startDragDropGame()" style="background-color: #8e44ad;">🧩 Drag and Drop</button><br>
         <button onclick="showLearningMode()" style="background-color: #2ecc71;">📚 Learning Mode</button>
     </div>
 
@@ -202,7 +202,7 @@
 
     <!-- DRAG AND DROP GAME SCREEN -->
     <div id="drag-drop-screen" class="hidden">
-        <h2>🧩 Game 3: Drag and Drop</h2>
+        <h2>🧩 Drag and Drop</h2>
         <div class="scoreboard">
             <span>Correct: <strong id="drag-correct">0</strong></span>
             <span>Incorrect: <strong id="drag-wrong">0</strong></span>
@@ -378,7 +378,7 @@
     }
 
     function renderDragDropBoard() {
-        const frenchTargets = shuffle([...new Set(dragGameState.pairs.map(item => item.fr))]);
+        const frenchTargets = [...new Set(dragGameState.pairs.map(item => item.fr))];
         const frenchContainer = document.getElementById('drag-french-list');
         const englishContainer = document.getElementById('drag-english-list');
 
