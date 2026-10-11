@@ -531,8 +531,22 @@
         document.getElementById('drag-instructions-overlay').classList.add('hidden');
     }
 
+    function ensureSpeechReady() {
+        if (!('speechSynthesis' in window)) return false;
+
+        try {
+            if (typeof window.speechSynthesis.resume === 'function') {
+                window.speechSynthesis.resume();
+            }
+        } catch (error) {
+            console.log('Speech resume was unavailable:', error);
+        }
+
+        return true;
+    }
+
     function speakDragInstruction() {
-        if (!('speechSynthesis' in window)) return;
+        if (!ensureSpeechReady()) return;
 
         const text = 'Welcome to Drag and Drop Game. Please drag the English word on the right hand side to match with the French word on the left hand side.';
         const utterance = new SpeechSynthesisUtterance(text);
@@ -552,7 +566,7 @@
     }
 
     function playLearningWord(word, langCode) {
-        if (!('speechSynthesis' in window)) return;
+        if (!ensureSpeechReady()) return;
         window.speechSynthesis.cancel();
         speakText(word, langCode);
     }
@@ -763,9 +777,21 @@
 
     function speakText(text, langCode) {
         if (!('speechSynthesis' in window) || !text) return;
+        if (!ensureSpeechReady()) return;
+
         let utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = langCode;
+        utterance.lang = langCode || 'en-US';
         utterance.rate = 0.9;
+
+        const voices = window.speechSynthesis.getVoices();
+        const preferredVoice = voices.find(voice => voice.lang && voice.lang.toLowerCase() === (langCode || 'en-US').toLowerCase())
+            || voices.find(voice => voice.lang && voice.lang.toLowerCase().startsWith((langCode || 'en-US').split('-')[0].toLowerCase()));
+
+        if (preferredVoice) {
+            utterance.voice = preferredVoice;
+        }
+
+        window.speechSynthesis.cancel();
         window.speechSynthesis.speak(utterance);
     }
 
@@ -936,6 +962,22 @@
         document.getElementById('learning-screen').classList.add('hidden');
         document.getElementById('drag-drop-screen').classList.add('hidden');
         document.getElementById('main-menu').classList.remove('hidden');
+    }
+
+    if ('speechSynthesis' in window) {
+        const resumeSpeechOnInteraction = () => {
+            try {
+                if (typeof window.speechSynthesis.resume === 'function') {
+                    window.speechSynthesis.resume();
+                }
+            } catch (error) {
+                console.log('Speech resume on interaction failed:', error);
+            }
+        };
+
+        window.addEventListener('touchstart', resumeSpeechOnInteraction, { passive: true });
+        window.addEventListener('pointerdown', resumeSpeechOnInteraction, { passive: true });
+        window.addEventListener('keydown', resumeSpeechOnInteraction, { passive: true });
     }
 </script>
 
