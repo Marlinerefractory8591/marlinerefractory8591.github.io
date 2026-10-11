@@ -121,6 +121,33 @@
             min-width: 140px;
             margin: 6px;
         }
+        .instruction-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.65);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .instruction-card {
+            background: white;
+            width: min(90%, 700px);
+            border-radius: 18px;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.2);
+            padding: 30px 25px 20px;
+            text-align: center;
+        }
+        .instruction-card h3 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+        .instruction-card p {
+            font-size: 24px;
+            line-height: 1.6;
+            color: #333;
+            margin: 20px 10px;
+        }
         input[type="text"] {
             font-size: 28px;
             padding: 12px;
@@ -178,7 +205,7 @@
         <h2>Select a Game Mode:</h2>
         <!-- <button onclick="startGame('face')">👀 Game 1: The Face (Le Visage)</button><br>
         <button onclick="startGame('body')">🏃‍♂️ Game 2: The Body (Le Corps)</button><br> -->
-        <button onclick="startDragDropGame()" style="background-color: #8e44ad;">🧩 Drag and Drop</button><br>
+        <button onclick="startDragDropGame()" style="background-color: #8e44ad;">🧩 Drag and Drop Game</button><br>
         <button onclick="showLearningMode()" style="background-color: #2ecc71;">📚 Learning Mode</button>
     </div>
 
@@ -202,7 +229,8 @@
 
     <!-- DRAG AND DROP GAME SCREEN -->
     <div id="drag-drop-screen" class="hidden">
-        <h2>🧩 Drag and Drop</h2>
+        <h2>🧩 Drag and Drop Game</h2>
+        <button onclick="openDragInstructions()" style="background-color: #f39c12; font-size: 18px; padding: 10px 20px;">📝 Instructions</button>
         <div class="scoreboard">
             <span>Correct: <strong id="drag-correct">0</strong></span>
             <span>Incorrect: <strong id="drag-wrong">0</strong></span>
@@ -256,6 +284,14 @@
         <h2>🎉 Test Completed! 🎉</h2>
         <div id="final-stats" style="font-size: 26px; line-height: 1.6; margin: 20px 0;"></div>
         <button onclick="returnToMenu()">Play Again / Main Menu</button>
+    </div>
+</div>
+
+<div id="drag-instructions-overlay" class="instruction-overlay hidden">
+    <div class="instruction-card">
+        <h3>Drag and Drop Instructions</h3>
+        <p>Welcome to Drag and Drop Game. Please drag the English word on the right hand side to match with the French word on the left hand side.</p>
+        <button onclick="closeDragInstructions()" style="background-color: #e74c3c; font-size: 20px; padding: 12px 24px;">Dismiss</button>
     </div>
 </div>
 
@@ -353,6 +389,36 @@
         document.getElementById('english-word-list').innerHTML = englishWords
             .map(word => `<button class="word-chip" onclick="playLearningWord('${word.replace(/'/g, "\\'")}', 'en-US')">${word}</button>`)
             .join('');
+    }
+
+    function openDragInstructions() {
+        const overlay = document.getElementById('drag-instructions-overlay');
+        overlay.classList.remove('hidden');
+        speakDragInstruction();
+    }
+
+    function closeDragInstructions() {
+        document.getElementById('drag-instructions-overlay').classList.add('hidden');
+    }
+
+    function speakDragInstruction() {
+        if (!('speechSynthesis' in window)) return;
+
+        const text = 'Welcome to Drag and Drop Game. Please drag the English word on the right hand side to match with the French word on the left hand side.';
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'en-US';
+        utterance.rate = 0.9;
+
+        const voices = window.speechSynthesis.getVoices();
+        const femaleVoice = voices.find(voice => /female|woman|samantha|zira|aria|victoria|google us english/i.test(voice.name))
+            || voices.find(voice => voice.lang && voice.lang.toLowerCase().startsWith('en'));
+
+        if (femaleVoice) {
+            utterance.voice = femaleVoice;
+        }
+
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(utterance);
     }
 
     function playLearningWord(word, langCode) {
