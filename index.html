@@ -583,6 +583,20 @@
         document.getElementById('learning-instructions-overlay').classList.add('hidden');
     }
 
+    function dismissAnyInstructionOverlay() {
+        const dragOverlay = document.getElementById('drag-instructions-overlay');
+        const learningOverlay = document.getElementById('learning-instructions-overlay');
+
+        if (!dragOverlay.classList.contains('hidden')) {
+            closeDragInstructions();
+            return;
+        }
+
+        if (!learningOverlay.classList.contains('hidden')) {
+            closeLearningInstructions();
+        }
+    }
+
     function ensureSpeechReady() {
         if (!('speechSynthesis' in window)) return false;
 
@@ -1096,7 +1110,12 @@
 
         window.addEventListener('touchstart', resumeSpeechOnInteraction, { passive: true });
         window.addEventListener('pointerdown', resumeSpeechOnInteraction, { passive: true });
-        window.addEventListener('keydown', resumeSpeechOnInteraction, { passive: true });
+        window.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                dismissAnyInstructionOverlay();
+            }
+            resumeSpeechOnInteraction();
+        }, { passive: true });
     }
 </script>
 
