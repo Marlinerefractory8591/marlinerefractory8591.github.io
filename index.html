@@ -357,8 +357,8 @@
         <div class="scoreboard">
             <span>Correct: <strong id="drag-correct">0</strong></span>
             <span>Incorrect: <strong id="drag-wrong">0</strong></span>
-            <span>Percent: <strong id="drag-percent">0%</strong></span>
-            <span>Grade: <strong id="drag-grade">F</strong></span>
+            <span>Percent: <strong id="drag-percent">--</strong></span>
+            <span>Grade: <strong id="drag-grade">--</strong></span>
         </div>
 
         <div class="drag-board">
@@ -675,15 +675,18 @@
     function updateDragScore() {
         const totalAttempts = dragGameState.correct + dragGameState.wrong;
         const percentage = totalAttempts > 0 ? Math.round((dragGameState.correct / totalAttempts) * 100) : 0;
-        let grade = 'F';
-        if (percentage >= 90) grade = 'A';
-        else if (percentage >= 80) grade = 'B';
-        else if (percentage >= 70) grade = 'C';
-        else if (percentage >= 60) grade = 'D';
+        let grade = '--';
+        if (totalAttempts > 0) {
+            if (percentage >= 90) grade = 'A';
+            else if (percentage >= 80) grade = 'B';
+            else if (percentage >= 70) grade = 'C';
+            else if (percentage >= 60) grade = 'D';
+            else grade = 'F';
+        }
 
         document.getElementById('drag-correct').innerText = dragGameState.correct;
         document.getElementById('drag-wrong').innerText = dragGameState.wrong;
-        document.getElementById('drag-percent').innerText = percentage + '%';
+        document.getElementById('drag-percent').innerText = totalAttempts > 0 ? percentage + '%' : '--';
         document.getElementById('drag-grade').innerText = grade;
     }
 
