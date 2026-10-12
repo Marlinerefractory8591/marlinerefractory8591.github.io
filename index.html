@@ -102,6 +102,12 @@
             gap: 8px;
             white-space: nowrap;
         }
+        .word-chip.french-word {
+            background-color: #3498db;
+        }
+        .word-chip.french-word:hover {
+            background-color: #2980b9;
+        }
         .word-chip:hover {
             background-color: #27ae60;
             transform: translateY(-2px);
@@ -416,7 +422,7 @@
 
     <!-- SUMMARY SCREEN -->
     <div id="summary-screen" class="hidden">
-        <h2>🎉 Test Completed! 🎉</h2>
+        <h2>🎉 Game Completed! 🎉</h2>
         <div id="final-stats" style="font-size: 26px; line-height: 1.6; margin: 20px 0;"></div>
         <button onclick="returnToMenu()">Play Again / Main Menu</button>
     </div>
@@ -521,12 +527,12 @@
             <div class="pair-row">
                 <div class="learning-column">
                     <div class="word-list">
-                        <button class="word-chip" onclick="playLearningWord('${pair.fr.replace(/'/g, "\\'")}', 'fr-FR')">${pair.fr}</button>
+                        <button class="word-chip french-word" onclick="playLearningWord('${pair.fr.replace(/'/g, "\\'")}', 'fr-FR')">${pair.fr}</button>
                     </div>
                 </div>
                 <div class="learning-column">
                     <div class="word-list">
-                        <button class="word-chip" onclick="playLearningWord('${pair.en.replace(/'/g, "\\'")}', 'en-US')">${pair.en}</button>
+                        <button class="word-chip english-word" onclick="playLearningWord('${pair.en.replace(/'/g, "\\'")}', 'en-US')">${pair.en}</button>
                     </div>
                 </div>
             </div>
@@ -714,21 +720,30 @@
         if (!AudioContextClass) return;
 
         const audioContext = new AudioContextClass();
-        const oscillator = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
+        const notes = [
+            { freq: 392, duration: 0.12 },
+            { freq: 523.25, duration: 0.12 },
+            { freq: 659.25, duration: 0.16 },
+            { freq: 783.99, duration: 0.22 }
+        ];
 
-        oscillator.type = 'triangle';
-        oscillator.frequency.setValueAtTime(660, audioContext.currentTime);
-        oscillator.frequency.linearRampToValueAtTime(880, audioContext.currentTime + 0.12);
+        notes.forEach((note, index) => {
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            const startTime = audioContext.currentTime + index * 0.10;
 
-        gainNode.gain.setValueAtTime(0.0001, audioContext.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.18, audioContext.currentTime + 0.02);
-        gainNode.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.26);
+            oscillator.type = 'triangle';
+            oscillator.frequency.setValueAtTime(note.freq, startTime);
 
-        oscillator.connect(gainNode);
-        gainNode.connect(audioContext.destination);
-        oscillator.start();
-        oscillator.stop(audioContext.currentTime + 0.28);
+            gainNode.gain.setValueAtTime(0.0001, startTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.14, startTime + 0.02);
+            gainNode.gain.exponentialRampToValueAtTime(0.0001, startTime + note.duration);
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            oscillator.start(startTime);
+            oscillator.stop(startTime + note.duration + 0.03);
+        });
     }
 
     function playErrorTone() {
