@@ -345,7 +345,8 @@
         <h2>Select a Game Mode:</h2>
         <!-- <button onclick="startGame('face')">👀 Game 1: The Face (Le Visage)</button><br>
         <button onclick="startGame('body')">🏃‍♂️ Game 2: The Body (Le Corps)</button><br> -->
-        <button onclick="startDragDropGame()" style="background-color: #8e44ad;">🧩 Drag and Drop - English to French Game</button><br>
+        <button onclick="startDragDropGame('en2fr')" style="background-color: #8e44ad;">🧩 Drag and Drop - English to French Game</button><br>
+        <button onclick="startDragDropGame('fr2en')" style="background-color: #6c5ce7;">🧩 Drag and Drop - French to English Game</button><br>
         <button onclick="showLearningMode()" style="background-color: #2ecc71;">📚 Learning Mode</button>
     </div>
 
@@ -370,7 +371,7 @@
 
     <!-- Drag and Drop - English to French GAME SCREEN -->
     <div id="drag-drop-screen" class="hidden">
-        <h2>🧩 Drag and Drop - English to French Game</h2>
+        <h2 id="drag-game-title">🧩 Drag and Drop - English to French Game</h2>
         <button onclick="openDragInstructions()" style="background-color: #f39c12; font-size: 18px; padding: 10px 20px;">📝 Instructions</button>
         <div class="scoreboard">
             <span>Correct: <strong id="drag-correct">0</strong></span>
@@ -381,11 +382,11 @@
 
         <div class="drag-board">
             <div class="learning-column">
-                <h3 style="color: #2980b9;">French</h3>
+                <h3 id="drag-left-label" style="color: #2980b9;">French</h3>
                 <div id="drag-french-list"></div>
             </div>
             <div class="learning-column">
-                <h3 style="color: #27ae60;">English</h3>
+                <h3 id="drag-right-label" style="color: #27ae60;">English</h3>
                 <div id="drag-english-list" class="word-list"></div>
             </div>
         </div>
@@ -431,7 +432,7 @@
 <div id="drag-instructions-overlay" class="instruction-overlay hidden">
     <div class="instruction-card">
         <h3>Instructions</h3>
-        <p>Welcome to Drag and Drop - English to French Game. Please drag the English word on the right hand side to match with the French word on the left hand side.</p>
+        <p id="drag-instruction-text">Welcome to Drag and Drop - English to French Game. Please drag the English word on the right hand side to match with the French word on the left hand side.</p>
         <button onclick="closeDragInstructions()" style="background-color: #e74c3c; font-size: 20px; padding: 12px 24px;">Dismiss</button>
     </div>
 </div>
@@ -479,7 +480,8 @@
         matched: [],
         correct: 0,
         wrong: 0,
-        total: 0
+        total: 0,
+        mode: 'en2fr'
     };
 
     function shuffle(arr) {
@@ -541,6 +543,13 @@
 
     function openDragInstructions() {
         const overlay = document.getElementById('drag-instructions-overlay');
+        const instructionText = document.getElementById('drag-instruction-text');
+        const mode = dragGameState.mode === 'fr2en' ? 'French to English' : 'English to French';
+
+        instructionText.textContent = dragGameState.mode === 'fr2en'
+            ? 'Welcome to Drag and Drop - French to English Game. Please drag the French word on the right hand side to match with the English word on the left hand side.'
+            : 'Welcome to Drag and Drop - English to French Game. Please drag the English word on the right hand side to match with the French word on the left hand side.';
+
         overlay.classList.remove('hidden');
         speakDragInstruction();
     }
@@ -566,7 +575,9 @@
     function speakDragInstruction() {
         if (!ensureSpeechReady()) return;
 
-        const text = 'Welcome to Drag and Drop - English to French Game. Please drag the English word on the right hand side to match with the French word on the left hand side.';
+        const text = dragGameState.mode === 'fr2en'
+            ? 'Welcome to Drag and Drop - French to English Game. Please drag the French word on the right hand side to match with the English word on the left hand side.'
+            : 'Welcome to Drag and Drop - English to French Game. Please drag the English word on the right hand side to match with the French word on the left hand side.';
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = 'en-US';
         utterance.rate = 0.9;
@@ -589,12 +600,31 @@
         speakText(word, langCode);
     }
 
-    function startDragDropGame() {
+    function startDragDropGame(mode = 'en2fr') {
+        dragGameState.mode = mode;
         dragGameState.pairs = shuffle(allVocabulary);
         dragGameState.matched = [];
         dragGameState.correct = 0;
         dragGameState.wrong = 0;
         dragGameState.total = dragGameState.pairs.length;
+
+        const title = document.getElementById('drag-game-title');
+        const leftLabel = document.getElementById('drag-left-label');
+        const rightLabel = document.getElementById('drag-right-label');
+
+        if (mode === 'fr2en') {
+            title.textContent = '🧩 Drag and Drop - French to English Game';
+            leftLabel.textContent = 'English';
+            leftLabel.style.color = '#27ae60';
+            rightLabel.textContent = 'French';
+            rightLabel.style.color = '#2980b9';
+        } else {
+            title.textContent = '🧩 Drag and Drop - English to French Game';
+            leftLabel.textContent = 'French';
+            leftLabel.style.color = '#2980b9';
+            rightLabel.textContent = 'English';
+            rightLabel.style.color = '#27ae60';
+        }
 
         document.getElementById('main-menu').classList.add('hidden');
         document.getElementById('learning-screen').classList.add('hidden');
@@ -606,43 +636,48 @@
     }
 
     function renderDragDropBoard() {
-        const frenchTargets = [...new Set(dragGameState.pairs.map(item => item.fr))];
-        const frenchContainer = document.getElementById('drag-french-list');
-        const englishContainer = document.getElementById('drag-english-list');
+        const isEnglishToFrench = dragGameState.mode === 'en2fr';
+        const targetWords = [...new Set(dragGameState.pairs.map(item => isEnglishToFrench ? item.fr : item.en))];
+        const leftContainer = document.getElementById('drag-french-list');
+        const rightContainer = document.getElementById('drag-english-list');
+        const targetLang = isEnglishToFrench ? 'fr-FR' : 'en-US';
+        const answerLang = isEnglishToFrench ? 'en-US' : 'fr-FR';
 
-        frenchContainer.innerHTML = frenchTargets.map((frWord) => {
-            const matchedPair = dragGameState.matched.find(item => item.fr === frWord);
+        leftContainer.innerHTML = targetWords.map((targetWord) => {
+            const matchedPair = dragGameState.matched.find(item => (isEnglishToFrench ? item.fr : item.en) === targetWord);
+            const matchedAnswer = matchedPair ? (isEnglishToFrench ? matchedPair.en : matchedPair.fr) : '';
+
             if (matchedPair) {
                 return `
-                    <div class="drop-slot matched" data-word="${frWord}" tabindex="0" role="button" aria-label="Listen to ${frWord}" onclick="playLearningWord('${frWord.replace(/'/g, "\\'")}', 'fr-FR')">
-                        <div class="target-label">${frWord}</div>
-                        <div class="matched-word">${matchedPair.en}</div>
+                    <div class="drop-slot matched" data-word="${targetWord}" tabindex="0" role="button" aria-label="Listen to ${targetWord}" onclick="playLearningWord('${targetWord.replace(/'/g, "\\'")}', '${targetLang}')">
+                        <div class="target-label">${targetWord}</div>
+                        <div class="matched-word">${matchedAnswer}</div>
                     </div>
                 `;
             }
 
             return `
-                <div class="drop-slot" data-word="${frWord}" tabindex="0" role="button" aria-label="Listen to ${frWord}" onclick="playLearningWord('${frWord.replace(/'/g, "\\'")}', 'fr-FR')">
-                    <div class="target-label">${frWord}</div>
+                <div class="drop-slot" data-word="${targetWord}" tabindex="0" role="button" aria-label="Listen to ${targetWord}" onclick="playLearningWord('${targetWord.replace(/'/g, "\\'")}', '${targetLang}')">
+                    <div class="target-label">${targetWord}</div>
                 </div>
             `;
         }).join('');
 
-        const remainingEnglish = shuffle(
+        const remainingAnswers = shuffle(
             dragGameState.pairs
                 .filter(pair => !dragGameState.matched.some(item => item.fr === pair.fr && item.en === pair.en))
-                .map(pair => pair.en)
+                .map(pair => isEnglishToFrench ? pair.en : pair.fr)
         );
 
-        englishContainer.innerHTML = remainingEnglish
+        rightContainer.innerHTML = remainingAnswers
             .map(word => `<button class="word-chip draggable-word" draggable="true" data-word="${word}">${word}</button>`)
             .join('');
 
-        englishContainer.querySelectorAll('.draggable-word').forEach((button) => {
+        rightContainer.querySelectorAll('.draggable-word').forEach((button) => {
             button.addEventListener('click', (event) => {
                 const word = event.currentTarget.dataset.word;
                 if (word) {
-                    playLearningWord(word, 'en-US');
+                    playLearningWord(word, answerLang);
                 }
             });
 
@@ -652,14 +687,14 @@
             });
         });
 
-        frenchContainer.querySelectorAll('.drop-slot').forEach((slot) => {
+        leftContainer.querySelectorAll('.drop-slot').forEach((slot) => {
             if (slot.classList.contains('matched')) return;
             slot.addEventListener('dragover', (event) => event.preventDefault());
             slot.addEventListener('drop', handleDragDrop);
             slot.addEventListener('keydown', (event) => {
                 if (event.key === 'Enter' || event.key === ' ') {
                     event.preventDefault();
-                    playLearningWord(slot.dataset.word, 'fr-FR');
+                    playLearningWord(slot.dataset.word, targetLang);
                 }
             });
         });
@@ -670,13 +705,15 @@
     function handleDragDrop(event) {
         event.preventDefault();
         const droppedWord = event.dataTransfer.getData('text/plain');
-        const targetFrenchWord = event.currentTarget.dataset.word;
+        const targetWord = event.currentTarget.dataset.word;
 
-        if (!droppedWord || !targetFrenchWord) return;
+        if (!droppedWord || !targetWord) return;
 
-        const matchingPair = dragGameState.pairs.find(
-            pair => pair.fr === targetFrenchWord && pair.en === droppedWord
-        );
+        const matchingPair = dragGameState.pairs.find(pair => {
+            const expectedTarget = dragGameState.mode === 'en2fr' ? pair.fr : pair.en;
+            const expectedAnswer = dragGameState.mode === 'en2fr' ? pair.en : pair.fr;
+            return expectedTarget === targetWord && expectedAnswer === droppedWord;
+        });
 
         if (matchingPair) {
             dragGameState.matched.push(matchingPair);
