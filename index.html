@@ -521,12 +521,12 @@
             <div class="pair-row">
                 <div class="learning-column">
                     <div class="word-list">
-                        <button class="word-chip" onclick="playLearningWord('${pair.fr.replace(/'/g, "\\'")}', 'fr-FR')"><span class="flag">🇫🇷</span> ${pair.fr}</button>
+                        <button class="word-chip" onclick="playLearningWord('${pair.fr.replace(/'/g, "\\'")}', 'fr-FR')">${pair.fr}</button>
                     </div>
                 </div>
                 <div class="learning-column">
                     <div class="word-list">
-                        <button class="word-chip" onclick="playLearningWord('${pair.en.replace(/'/g, "\\'")}', 'en-US')"><span class="flag">🇨🇦</span> ${pair.en}</button>
+                        <button class="word-chip" onclick="playLearningWord('${pair.en.replace(/'/g, "\\'")}', 'en-US')">${pair.en}</button>
                     </div>
                 </div>
             </div>
@@ -609,15 +609,15 @@
             if (matchedPair) {
                 return `
                     <div class="drop-slot matched" data-word="${frWord}" tabindex="0" role="button" aria-label="Listen to ${frWord}" onclick="playLearningWord('${frWord.replace(/'/g, "\\'")}', 'fr-FR')">
-                        <div class="target-label"><span class="flag">🇫🇷</span> ${frWord}</div>
-                        <div class="matched-word"><span class="flag">🇨🇦</span> ${matchedPair.en}</div>
+                        <div class="target-label">${frWord}</div>
+                        <div class="matched-word">${matchedPair.en}</div>
                     </div>
                 `;
             }
 
             return `
                 <div class="drop-slot" data-word="${frWord}" tabindex="0" role="button" aria-label="Listen to ${frWord}" onclick="playLearningWord('${frWord.replace(/'/g, "\\'")}', 'fr-FR')">
-                    <div class="target-label"><span class="flag">🇫🇷</span> ${frWord}</div>
+                    <div class="target-label">${frWord}</div>
                 </div>
             `;
         }).join('');
@@ -629,7 +629,7 @@
         );
 
         englishContainer.innerHTML = remainingEnglish
-            .map(word => `<button class="word-chip draggable-word" draggable="true" data-word="${word}"><span class="flag">🇨🇦</span> ${word}</button>`)
+            .map(word => `<button class="word-chip draggable-word" draggable="true" data-word="${word}">${word}</button>`)
             .join('');
 
         englishContainer.querySelectorAll('.draggable-word').forEach((button) => {
