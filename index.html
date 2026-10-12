@@ -345,7 +345,7 @@
         <h2>Select a Game Mode:</h2>
         <!-- <button onclick="startGame('face')">👀 Game 1: The Face (Le Visage)</button><br>
         <button onclick="startGame('body')">🏃‍♂️ Game 2: The Body (Le Corps)</button><br> -->
-        <button onclick="startDragDropGame()" style="background-color: #8e44ad;">🧩 Drag and Drop Game</button><br>
+        <button onclick="startDragDropGame()" style="background-color: #8e44ad;">🧩 Drag and Drop - English to French Game</button><br>
         <button onclick="showLearningMode()" style="background-color: #2ecc71;">📚 Learning Mode</button>
     </div>
 
@@ -368,9 +368,9 @@
         </div>
     </div>
 
-    <!-- DRAG AND DROP GAME SCREEN -->
+    <!-- Drag and Drop - English to French GAME SCREEN -->
     <div id="drag-drop-screen" class="hidden">
-        <h2>🧩 Drag and Drop Game</h2>
+        <h2>🧩 Drag and Drop - English to French Game</h2>
         <button onclick="openDragInstructions()" style="background-color: #f39c12; font-size: 18px; padding: 10px 20px;">📝 Instructions</button>
         <div class="scoreboard">
             <span>Correct: <strong id="drag-correct">0</strong></span>
@@ -430,8 +430,8 @@
 
 <div id="drag-instructions-overlay" class="instruction-overlay hidden">
     <div class="instruction-card">
-        <h3>Drag and Drop Instructions</h3>
-        <p>Welcome to Drag and Drop Game. Please drag the English word on the right hand side to match with the French word on the left hand side.</p>
+        <h3>Instructions</h3>
+        <p>Welcome to Drag and Drop - English to French Game. Please drag the English word on the right hand side to match with the French word on the left hand side.</p>
         <button onclick="closeDragInstructions()" style="background-color: #e74c3c; font-size: 20px; padding: 12px 24px;">Dismiss</button>
     </div>
 </div>
@@ -566,7 +566,7 @@
     function speakDragInstruction() {
         if (!ensureSpeechReady()) return;
 
-        const text = 'Welcome to Drag and Drop Game. Please drag the English word on the right hand side to match with the French word on the left hand side.';
+        const text = 'Welcome to Drag and Drop - English to French Game. Please drag the English word on the right hand side to match with the French word on the left hand side.';
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = 'en-US';
         utterance.rate = 0.9;
