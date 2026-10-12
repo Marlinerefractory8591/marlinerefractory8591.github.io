@@ -555,6 +555,9 @@
     }
 
     function closeDragInstructions() {
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+        }
         document.getElementById('drag-instructions-overlay').classList.add('hidden');
     }
 
