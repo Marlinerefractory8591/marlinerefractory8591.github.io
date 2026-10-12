@@ -353,7 +353,7 @@
     <!-- LEARNING MODE SCREEN -->
     <div id="learning-screen" class="hidden">
         <h2>📚 Learning Mode</h2>
-        <p style="color: #7f8c8d; font-size: 20px;">Click any word to hear the pronunciation.</p>
+        <button onclick="openLearningInstructions()" style="background-color: #f39c12; font-size: 18px; padding: 10px 20px;">📝 Instructions</button>
         <button onclick="returnToMenu()" style="background-color: #ab41e1; font-size: 18px; padding: 10px 20px;">🏠 Back to Menu</button>
 
         <div class="learning-grid">
@@ -434,6 +434,14 @@
         <h3>Instructions</h3>
         <p id="drag-instruction-text">Welcome to Drag and Drop - English to French Game. Please drag the English word on the right hand side to match with the French word on the left hand side.</p>
         <button onclick="closeDragInstructions()" style="background-color: #ae3ce7; font-size: 20px; padding: 12px 24px;">Dismiss</button>
+    </div>
+</div>
+
+<div id="learning-instructions-overlay" class="instruction-overlay hidden">
+    <div class="instruction-card">
+        <h3>Instructions</h3>
+        <p id="learning-instruction-text">Click any word to hear the pronunciation.</p>
+        <button onclick="closeLearningInstructions()" style="background-color: #ae3ce7; font-size: 20px; padding: 12px 24px;">Dismiss</button>
     </div>
 </div>
 
@@ -561,6 +569,20 @@
         document.getElementById('drag-instructions-overlay').classList.add('hidden');
     }
 
+    function openLearningInstructions() {
+        const overlay = document.getElementById('learning-instructions-overlay');
+        document.getElementById('learning-instruction-text').textContent = 'Click any word to hear the pronunciation.';
+        overlay.classList.remove('hidden');
+        speakLearningInstruction();
+    }
+
+    function closeLearningInstructions() {
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+        }
+        document.getElementById('learning-instructions-overlay').classList.add('hidden');
+    }
+
     function ensureSpeechReady() {
         if (!('speechSynthesis' in window)) return false;
 
@@ -581,6 +603,26 @@
         const text = dragGameState.mode === 'fr2en'
             ? 'Welcome to Drag and Drop - French to English Game. Please drag the French word on the right hand side to match with the English word on the left hand side.'
             : 'Welcome to Drag and Drop - English to French Game. Please drag the English word on the right hand side to match with the French word on the left hand side.';
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'en-US';
+        utterance.rate = 0.9;
+
+        const voices = window.speechSynthesis.getVoices();
+        const femaleVoice = voices.find(voice => /female|woman|samantha|zira|aria|victoria|google us english/i.test(voice.name))
+            || voices.find(voice => voice.lang && voice.lang.toLowerCase().startsWith('en'));
+
+        if (femaleVoice) {
+            utterance.voice = femaleVoice;
+        }
+
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(utterance);
+    }
+
+    function speakLearningInstruction() {
+        if (!ensureSpeechReady()) return;
+
+        const text = 'Click any word to hear the pronunciation.';
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = 'en-US';
         utterance.rate = 0.9;
