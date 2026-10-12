@@ -776,7 +776,7 @@
         if (matchingPair) {
             dragGameState.matched.push(matchingPair);
             dragGameState.correct++;
-            speakText('Correct', 'en-US');
+            // speakText('Correct', 'en-US');
             setTimeout(() => {
                 if ('speechSynthesis' in window) {
                     speakText(matchingPair.fr, 'fr-FR');
