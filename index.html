@@ -633,6 +633,13 @@
             .join('');
 
         englishContainer.querySelectorAll('.draggable-word').forEach((button) => {
+            button.addEventListener('click', (event) => {
+                const word = event.currentTarget.dataset.word;
+                if (word) {
+                    playLearningWord(word, 'en-US');
+                }
+            });
+
             button.addEventListener('dragstart', (event) => {
                 event.dataTransfer.setData('text/plain', event.currentTarget.dataset.word);
                 event.dataTransfer.effectAllowed = 'move';
